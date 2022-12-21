@@ -7,11 +7,31 @@
     <h3>
       Agent version: <span id="ipfs-info-agent">{{ agentVersion }}</span>
     </h3>
+    <div>
+      <input type="file" ref="fileInput" @change="uploadFile"/>
+    </div>
+    <v-list>
+      <v-list-item
+        v-for="(fl, i) in fstore.files"
+        :key="'fl'+i"
+      >
+        <v-list-item-content>
+        {{ fl.path }}
+        </v-list-item-content>
+      </v-list-item>
+    </v-list>
   </div>
 </template>
 
 <script>
+import { useFileStore } from '@/stores/useFileStore';
 export default {
+  setup () {
+    const fstore = useFileStore()
+    return {
+      fstore
+    }
+  },
   name: "IpfsInfo",
   data: function() {
     return {
@@ -37,10 +57,52 @@ export default {
         // Set successful status text.
         this.status = "Connected to IPFS =)";
         this.online = ipfs.isOnline();
+        console.log('loading files')
+        ipfs.ls('/nba', (err, files) => {
+          if(err) {
+            console.log(err)
+            return
+          }
+          else{
+            console.log(files)
+          }
+        })
+        console.log('files loaded')
       } catch (err) {
         // Set error status text.
         this.status = `Error: ${err}`;
       }
+    },
+    async uploadFile() {
+      const file = this.$refs.fileInput.files[0];
+      const fileContent = await this.readFile(file);
+      try {
+        const ipfs = await this.$ipfs;
+        // Add the file to IPFS
+        for await (const fileadded of ipfs.addAll([{
+          path: '/nba/'+file.name,
+          content: fileContent
+        }])){
+          console.log(fileadded);
+          //console.log(this.fstore.addFile(fileadded))
+          this.fstore.addFile(fileadded)
+          for await (const file1 of ipfs.ls('QmPqQYnGvAzi5dMTtD4oJSv2o6N5eyiw7ZQx2GT5H9Bg1x')) {
+            console.log(file1)
+          }
+        }
+        //console.log(fileadded);
+
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
     }
   }
 };

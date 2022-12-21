@@ -33,9 +33,13 @@
     "root": true
   },
   "dependencies": {
+    "@stacks/connect": "^7.1.0",
     "core-js": "^3.8.3",
     "ipfs-core": "^0.16.0",
-    "vue": "^3.0.4"
+    "pinia": "^2.0.28",
+    "stacks": "^0.44.12",
+    "vue": "^3.0.4",
+    "vuetify": "^3.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
